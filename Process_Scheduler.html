@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>进程调度模块</title>
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+
+<div class="section">
+    <a href="index.html">首页</a>
+</div>
+
+<div class="section" id="init">
+    <h2 class="title">系统初始化</h2>
+    <div class="cont">
+        <p class="row">
+            系统说明：
+        </p>
+        <p class="row">
+        <ul class="intro">
+            <li class="intro-item">
+                系统名称：<strong>进程调度模块</strong>
+            </li>
+            <li class="intro-item">
+                实现进程调度模块功能。进程调度包括先来先服务，最高优先级，时间片轮转，JavaScript 实现。
+            </li>
+            <li class="intro-item">
+                为每个进入后备队列的作业创建一个PCB，内容包括：<strong>进程标识</strong>、<strong>预计运行时间</strong>、<strong>优先级</strong>、<strong>剩余时间</strong>等。其中预计运行时间和优先级随机生成（1—20个时间片，A资源0-5，B资源0-3，C资源0-4）
+            </li>
+
+            <li class="intro-item">
+                为保证兼容性，请使用<strong> Chrome、FireFox、IE 10+ </strong>现代浏览器访问此页面。
+            </li>
+
+        </ul>
+        </p>
+        <p class="row">
+            任务数：
+            <input type="number" class="form-control" v-model="sum">
+            请选择调度算法：
+
+            <select class="custom-select" v-model="algo">
+                <option value="0">先来先服务</option>
+                <option value="1">优先数调度</option>
+                <option value="2">时间片轮转</option>
+            </select>
+
+            <button type="button" class="btn btn-success" @click="refresh">重置系统状态</button>
+        </p>
+    </div>
+</div>
+<div class="section" id="system">
+    <h2 class="title">系统状态</h2>
+    <div class="cont">
+        <p class="row">
+            已执行时间片：<span :class="times === allTimes ? 'done' : 'less'">{{ times }}</span> / {{ allTimes }}
+        </p>
+        <p class="row">系统信息（{{ systemMessage.length }}）：</p>
+        <p class="row">
+        <ul class="console" id="console">
+            <li class="console-item" v-for="msg in systemMessage">{{ msg }}</li>
+        </ul>
+        </p>
+        <p class="row">
+            模拟操作：
+            <button type="button" class="btn" @click="nextInf">实时演示</button>
+            <button type="button" class="btn" @click="stopIt">暂停</button>
+        </p>
+    </div>
+</div>
+<div class="section" id="back-queue">
+    <h2 class="title">
+        <span>后备队列</span>
+        <div class="data-row">
+            队列长度：<span class="done">{{ items.length }}</span>　
+        </div>
+        <div class="handle">
+            <button
+                    type="button"
+                    class="btn"
+                    :class="isHide ? 'btn-success' : ''"
+                    @click="togglePanel">
+                {{ isHide ? '展开' : '隐藏' }}后备队列
+            </button>
+        </div>
+    </h2>
+    <ul class="queue clearfix" :class="{ hide: isHide }">
+        <transition-group tag="ul" class="queue clearfix" :class="{ hide: isHide }" name="queue-animation">
+            <li class="jcb queue-animation-item" v-for="item in items" :key="item.id">
+                <p class="jcb-id">JCB - <strong>{{item.id}}</strong></p>
+                <div class="jcb-section">
+                    <div class="jcb-widget">
+                        <p class="jcb-title">Max</p>
+                        <p v-for="(value, key) in item.max">
+                            {{key}}：{{value}}
+                        </p>
+                    </div>
+                    <div class="jcb-widget">
+                        <p class="jcb-title">Allocation</p>
+                        <p v-for="(value, key) in item.allocation">
+                            {{key}}：<span :class="value === item.max[key] ? 'done' : 'less'">{{value}}</span>
+                        </p>
+                    </div>
+                </div>
+                <div class="jcb-section">
+                    <div class="jcb-widget">
+                        <p class="jcb-title">预计时间</p>
+                        <p>{{item.planTime}}</p>
+                    </div>
+                    <div class="jcb-widget">
+                        <p class="jcb-title">剩余</p>
+                        <p :class="item.restTime === 0 ? 'done' : 'less'">{{item.restTime}}</p>
+                    </div>
+                </div>
+            </li>
+        </transition-group>
+    </ul>
+</div>
+<div class="section" id="ready-queue">
+    <h2 class="title">
+        <span>就绪队列</span>
+        <div class="data-row">
+            队列长度：<span class="done">{{ items.length }}</span>　
+        </div>
+    </h2>
+    <transition-group tag="ul" class="queue clearfix" name="queue-animation">
+        <li class="jcb queue-animation-item" v-for="item in items" :key="item.id">
+            <p class="jcb-id">PCB - <strong>{{item.id}}</strong></p>
+            <div class="jcb-section">
+                <div class="jcb-widget">
+                    <p class="jcb-title">Max</p>
+                    <p v-for="(value, key) in item.max">
+                        {{key}}：{{value}}
+                    </p>
+                </div>
+                <div class="jcb-widget">
+                    <p class="jcb-title">Allocation</p>
+                    <p v-for="(value, key) in item.allocation">
+                        {{key}}：<span :class="value === item.max[key] ? 'done' : 'less'">{{value}}</span>
+                    </p>
+                </div>
+            </div>
+            <div class="jcb-section">
+                <div class="jcb-widget">
+                    <p class="jcb-title">预计时间</p>
+                    <p>{{item.planTime}}</p>
+                </div>
+                <div class="jcb-widget">
+                    <p class="jcb-title">优先级</p>
+                    <p>{{item.priority}}</p>
+                </div>
+                <div class="jcb-widget">
+                    <p class="jcb-title">剩余</p>
+                    <p :class="item.restTime === 0 ? 'done' : 'less'">{{item.restTime}}</p>
+                </div>
+            </div>
+        </li>
+    </transition-group>
+</div>
+<div class="section" id="block-queue-A">
+    <h2 class="title">
+        <span>阻塞队列 A</span>
+        <div class="data-row">
+            队列长度：<span class="done">{{ items.length }}</span>　
+        </div>
+    </h2>
+    <transition-group tag="ul" class="queue clearfix" name="queue-animation">
+        <li class="jcb queue-animation-item" v-for="item in items" :key="item.id">
+            <p class="jcb-id">JCB - <strong>{{item.id}}</strong></p>
+            <div class="jcb-section">
+                <div class="jcb-widget">
+                    <p class="jcb-title">Max</p>
+                    <p v-for="(value, key) in item.max">
+                        {{key}}：{{value}}
+                    </p>
+                </div>
+                <div class="jcb-widget">
+                    <p class="jcb-title">Allocation</p>
+                    <p v-for="(value, key) in item.allocation">
+                        {{key}}：<span :class="value === item.max[key] ? 'done' : 'less'">{{value}}</span>
+                    </p>
+                </div>
+            </div>
+            <div class="jcb-section">
+                <div class="jcb-widget">
+                    <p class="jcb-title">预计时间</p>
+                    <p>{{item.planTime}}</p>
+                </div>
+                <div class="jcb-widget">
+                    <p class="jcb-title">优先级</p>
+                    <p>{{item.priority}}</p>
+                </div>
+                <div class="jcb-widget">
+                    <p class="jcb-title">剩余</p>
+                    <p :class="item.restTime === 0 ? 'done' : 'less'">{{item.restTime}}</p>
+                </div>
+            </div>
+        </li>
+    </transition-group>
+</div>
+<div class="section" id="block-queue-B">
+    <h2 class="title">
+        <span>阻塞队列 B</span>
+        <div class="data-row">
+            队列长度：<span class="done">{{ items.length }}</span>　
+        </div>
+    </h2>
+    <transition-group tag="ul" class="queue clearfix" name="queue-animation">
+        <li class="jcb queue-animation-item" v-for="item in items" :key="item.id">
+            <p class="jcb-id">JCB - <strong>{{item.id}}</strong></p>
+            <div class="jcb-section">
+                <div class="jcb-widget">
+                    <p class="jcb-title">Max</p>
+                    <p v-for="(value, key) in item.max">
+                        {{key}}：{{value}}
+                    </p>
+                </div>
+                <div class="jcb-widget">
+                    <p class="jcb-title">Allocation</p>
+                    <p v-for="(value, key) in item.allocation">
+                        {{key}}：<span :class="value === item.max[key] ? 'done' : 'less'">{{value}}</span>
+                    </p>
+                </div>
+            </div>
+            <div class="jcb-section">
+                <div class="jcb-widget">
+                    <p class="jcb-title">预计时间</p>
+                    <p>{{item.planTime}}</p>
+                </div>
+                <div class="jcb-widget">
+                    <p class="jcb-title">优先级</p>
+                    <p>{{item.priority}}</p>
+                </div>
+                <div class="jcb-widget">
+                    <p class="jcb-title">剩余</p>
+                    <p :class="item.restTime === 0 ? 'done' : 'less'">{{item.restTime}}</p>
+                </div>
+            </div>
+        </li>
+    </transition-group>
+</div>
+<div class="section" id="block-queue-C">
+    <h2 class="title">
+        <span>阻塞队列 C</span>
+        <div class="data-row">
+            队列长度：<span class="done">{{ items.length }}</span>　
+        </div>
+    </h2>
+    <transition-group tag="ul" class="queue clearfix" name="queue-animation">
+        <li class="jcb queue-animation-item" v-for="item in items" :key="item.id">
+            <p class="jcb-id">JCB - <strong>{{item.id}}</strong></p>
+            <div class="jcb-section">
+                <div class="jcb-widget">
+                    <p class="jcb-title">Max</p>
+                    <p v-for="(value, key) in item.max">
+                        {{key}}：{{value}}
+                    </p>
+                </div>
+                <div class="jcb-widget">
+                    <p class="jcb-title">Allocation</p>
+                    <p v-for="(value, key) in item.allocation">
+                        {{key}}：<span :class="value === item.max[key] ? 'done' : 'less'">{{value}}</span>
+                    </p>
+                </div>
+            </div>
+            <div class="jcb-section">
+                <div class="jcb-widget">
+                    <p class="jcb-title">预计时间</p>
+                    <p>{{item.planTime}}</p>
+                </div>
+                <div class="jcb-widget">
+                    <p class="jcb-title">优先级</p>
+                    <p>{{item.priority}}</p>
+                </div>
+                <div class="jcb-widget">
+                    <p class="jcb-title">剩余</p>
+                    <p :class="item.restTime === 0 ? 'done' : 'less'">{{item.restTime}}</p>
+                </div>
+            </div>
+        </li>
+    </transition-group>
+</div>
+<div class="section" id="done-queue">
+    <h2 class="title">
+        <span>完成队列</span>
+        <div class="data-row">
+            队列长度：<span class="done">{{ items.length }}</span>　
+        </div>
+    </h2>
+    <transition-group tag="ul" class="queue clearfix" name="queue-animation">
+        <li class="jcb queue-animation-item" v-for="item in items" :key="item.id">
+            <p class="jcb-id">JCB - <strong>{{item.id}}</strong></p>
+            <div class="jcb-section">
+                <div class="jcb-widget">
+                    <p class="jcb-title">Max</p>
+                    <p v-for="(value, key) in item.max">
+                        {{key}}：{{value}}
+                    </p>
+                </div>
+                <div class="jcb-widget">
+                    <p class="jcb-title">Allocation</p>
+                    <p v-for="(value, key) in item.allocation">
+                        {{key}}：<span :class="value === item.max[key] ? 'done' : 'less'">{{value}}</span>
+                    </p>
+                </div>
+            </div>
+            <div class="jcb-section">
+                <div class="jcb-widget">
+                    <p class="jcb-title">预计时间</p>
+                    <p>{{item.planTime}}</p>
+                </div>
+                <div class="jcb-widget">
+                    <p class="jcb-title">优先级</p>
+                    <p>{{item.priority}}</p>
+                </div>
+                <div class="jcb-widget">
+                    <p class="jcb-title">剩余</p>
+                    <p :class="item.restTime === 0 ? 'done' : 'less'">{{item.restTime}}</p>
+                </div>
+            </div>
+        </li>
+    </transition-group>
+</div>
+
+<!-- MVC框架 用于页面构建 -->
+<script src="./js/vue.js"></script>
+<!-- 工具库 -->
+<script src="./js/lodash.min.js"></script>
+<!-- 私有工具实现 -->
+<script src="./js/util.js"></script>
+
+<!-- 以下脚本与课设实现有关 -->
+<!-- PCB 类实现 -->
+<script src="./js/PCB.js"></script>
+<!-- 队列 类实现 -->
+<script src="./js/Queue.js"></script>
+<!-- 页面操作逻辑，程序运行逻辑 -->
+<script src="./js/index2.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,451 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+ <head>
+  <title> 磁盘调度 </title>
+  <meta name="generator" content="editplus" />
+  <meta name="author" content="" />
+  <meta name="keywords" content="" />
+  <meta name="description" content="" />
+    <style type="text/css">
+  body{background-image:url(bg.jpg);background-size:100%;background-color:black;font-family:微软雅黑;}
+  h1{font-family:微软雅黑;font-size:50px;color:#FFFFFF;}
+  h2{color:#FFFFFF;}
+  .button{background-color: #87CEEB;color:#000000;font-family:微软雅黑;font-weight: 900;font-size: 15px;padding:3px 5px;border-radius:15px ;cursor:pointer;width:100px;height:30px;}
+  .radio{cursor:pointer;}
+  .text{background-color:#E1FFFF;width:300px;height:20px;border-radius: 15px}
+  </style>
+  <script language="JavaScript">
+  var g0,g1,g2;
+  function FCFS(array,m,now)
+  {
+		var sum=0;
+		var v1=document.getElementById("text");
+		var v2 = new Array(0);
+		for(var i=0;i<m;i++)
+		{
+		    v2+=array[i]+" ";
+		}
+		document.getElementById("div1").innerHTML="空闲磁道为:"+v2;
+		sum+=Math.abs(now-parseInt(array[0]));
+		for(var i=0;i<m-1;i++)
+		{
+			sum+=Math.abs(parseInt(array[i+1])-parseInt(array[i]));
+		}
+		document.getElementById("div2").innerHTML="移动总磁道数:"+sum;
+		document.getElementById("div3").innerHTML="";
+  }
+  function ShortPath(array,m,now)
+  {
+		var temp;
+		var sum=0;
+		var k=0;
+		var l;
+		var r;
+		var v2=new Array(0);
+		for(var i=0;i<m;i++)
+		{
+			for(var j=0;j<m;j++)
+			{
+				if(parseInt(array[i])<parseInt(array[j]))
+				{
+					temp=array[i];
+					array[i]=array[j];
+					array[j]=temp;
+				}
+			}
+		}
+		for(var i=0;i<m;i++)
+		{
+			v2+=array[i]+" ";
+		}
+		document.getElementById("div1").innerHTML="排列后空闲磁道数组为:"+v2;
+		var v3=new Array(0);
+		if(parseInt(array[m-1])<=now)
+		{
+			for(var i=m-1;i>=0;i--)
+			{
+				v3+=array[i]+" ";
+			}
+			sum=now-parseInt(array[0]);
+		}
+		else if(parseInt(array[0])>=now)
+		{
+			for(var i=0;i<m;i++)
+			{
+				v3+=array[i]+" ";
+			}
+			sum=parseInt(array[m-1])-now;
+		}
+		else
+		{
+			while(parseInt(array[k])<now)
+			{
+				k++;
+			}
+			l=k-1;
+			r=k;
+			while((l>=0)&&(r<m))
+			{
+				if((now-parseInt(array[l]))<=(parseInt(array[r])-now))
+				{
+					v3+=array[l]+" ";
+					sum+=Math.abs(now-parseInt(array[l]));
+					now=parseInt(array[l]);
+					l=l-1;
+				  }
+				else
+				{
+					v3+=array[r]+" ";
+					sum+=parseInt(array[r])-now;
+					now=parseInt(array[r]);
+					r=r+1;
+				}
+		  }
+		  if(l=-1)
+		  {
+			for(var j=r;j<m;j++)
+		  {
+		  	v3+=array[j]+" ";
+		  }
+			 sum+=Math.abs(parseInt(array[m-1])-parseInt(array[0]));
+		  }
+		  else
+		  {
+			for(var j=l;j>=0;j--)
+			{
+				v3+=array[j]+" ";
+
+			}
+			 sum+=Math.abs(parseInt(array[m-1])-parseInt(array[0]));
+		  }
+		}
+		document.getElementById("div2").innerHTML="磁道寻址方案:"+v3;
+		document.getElementById("div3").innerHTML="移动总磁道数:"+sum;
+
+  }
+  function SCAN(array,m,now,z)
+  {
+		var temp;
+		var sum=0;
+		var k=0;
+		var l;
+		var r;
+		var v2= new Array(0);
+		for(var i=0;i<m;i++)
+		{
+			for(var j=0;j<m;j++)
+			{
+				if(parseInt(array[i])<parseInt(array[j]))
+				{
+					temp=array[i];
+					array[i]=array[j];
+					array[j]=temp;
+				}
+			}
+		}
+		for(var i=0;i<m;i++)
+		{
+			v2+=array[i]+" ";
+		}
+		document.getElementById("div1").innerHTML="排列后空闲磁道数组为:"+v2;
+		g0=v2;
+		var v3=new Array();
+		var s=0;
+		if(parseInt(array[m-1])<=now)
+		{
+			for(var i=m-1;i>=0;i--)
+			{
+				v3+=array[i]+" ";
+			}
+			sum=now-parseInt(array[0]);
+		}
+		else if(parseInt(array[0])>=now)
+		{
+			for(var i=0;i<m;i++)
+			{
+				v3+=array[i]+" ";
+			}
+			sum=parseInt(array[m-1])-now;
+		}
+		else
+		{
+			while(parseInt(array[k])<now)
+			{
+				k++;
+			}
+			l=k-1;
+			r=k;
+//			if((now-parseInt(array[l]))<=(parseInt(array[r])-now))
+			if(z==0)
+			{
+			
+				for(var i=l;i>=0;i--)
+				{
+					v3+=array[i]+" ";
+				}
+				for(var i=k;i<m;i++)
+				{
+					v3+=array[i]+" ";
+				}
+				sum=(now-parseInt(array[0]))+(parseInt(array[m-1])-parseInt(array[0]));
+			}
+			else
+			{
+				for(var i=k;i<m;i++)
+				{
+					v3+=array[i]+" ";
+				}
+				for(var i=l;i>=0;i--)
+				{
+					v3+=array[i]+" ";
+				}
+				sum=(parseInt(array[m-1])-now)+(parseInt(array[m-1])-parseInt(array[0]));
+			}
+		}
+		document.getElementById("div2").innerHTML="磁道寻址方案:"+v3;
+		document.getElementById("div3").innerHTML="移动总磁道数:"+sum;
+		g1=v3;
+		g2=sum;
+		if(parseInt(v3[m-1])>parseInt(v3[0]))
+		{
+			z=0;
+		}
+		else
+		{
+			z=1;
+		}
+		return parseInt(array[m-1]);
+  }
+    function CSCAN(array,m,now)
+  {
+		var temp;
+		var sum=0;
+		var k=0;
+		var l;
+		var r;
+		var v2= new Array(0);
+		for(var i=0;i<m;i++)
+		{
+			for(var j=0;j<m;j++)
+			{
+				if(parseInt(array[i])<parseInt(array[j]))
+				{
+					temp=array[i];
+					array[i]=array[j];
+					array[j]=temp;
+				}
+			}
+		}
+		for(var i=0;i<m;i++)
+		{
+			v2+=array[i]+" ";
+		}
+		document.getElementById("div1").innerHTML="排列后空闲磁道数组为:"+v2;
+		var v3= new Array(0);
+		if(parseInt(array[m-1])<=now)
+		{
+			for(var i=m-1;i>=0;i--)
+			{
+				v3+=array[i]+" ";
+			}
+			sum=now-parseInt(array[0]);
+		}
+		else if(parseInt(array[0])>=now)
+		{
+			for(var i=0;i<m;i++)
+			{
+				v3+=array[i]+" ";
+			}
+			sum=parseInt(array[m-1])-now;
+		}
+		else
+		{
+			while(parseInt(array[k])<now)
+			{
+				k++;
+			}
+			l=k-1;
+			r=k;
+				for(var i=k;i<m;i++)
+				{
+					v3+=array[i]+" ";
+				}
+				for(var i=0;i<=l;i++)
+				{
+					v3+=array[i]+" ";
+				}
+				sum=2*(parseInt(array[m-1])-parseInt(array[0]));
+			}
+		document.getElementById("div2").innerHTML="磁道寻址方案:"+v3;
+		document.getElementById("div3").innerHTML="移动总磁道数:"+sum;
+  }
+ 
+  </script>
+ </head>
+
+ <body>
+ <a href="../index.html" class="text">首页</a>
+   <center>
+   <div>
+   <h1>磁盘调度算法</h1>
+   <h2>请输入当前空闲磁盘号：<input type="text" id="Array" name="Array" class="text" placeholder="请输入磁盘号序列，用逗号隔开"></h2>
+   <h2>请输入当前所在磁盘号：<input type="text" id="Now" name="Now" class="text"><h2>
+   <div>
+   <input type="button" value="FCFS" class="button" onClick="check1()">
+   <input type="button" value="SSTF" class="button" onClick="check2()">
+   <input type="button" value="SCAN" class="button" onClick="check3()">
+   <input type="button" value="CSCAN" class="button" onClick="check4()">
+   Out:<input type="radio" id= "Out" name="direction" class="radio" checked>
+   In:<input type="radio" id="In" name="direction" class="radio" >
+   </div>
+   <br>
+   <div id="output" value="">
+   <div id="div1"></div>
+   <div id="div2"></div>
+   <div id="div3"></div>
+   </div>
+   </div>
+  <script>
+function CheckNull(text,warning)
+{
+		 if(text.length==0)
+		 {
+		    alert(warning);
+			return false;　
+		 }
+　　else if (/\s/.test(text))
+　　{
+　　   alert("输入不能为空格!");
+			return false;　
+　　}
+		 return true;
+}
+	function check1(){
+	var v1=document.getElementById("Array").value;
+	var array = v1.split(","||" ");
+	var v2=document.getElementById("Now").value;
+			for(i=0;i<array.length;i++)
+	{
+		if(isNaN(array[i]))
+		{
+			alert("第"+(i+1)+"个输入不是数字!");
+			return;
+		}
+	}
+	if(isNaN(v2))
+	{
+		alert("当前磁盘号不是数字")
+		return;
+	}
+	if(CheckNull(v1,"请输入空闲磁盘号！")&&CheckNull(v2,"请输入当前磁盘号！"))
+	{
+		FCFS(array,array.length,parseInt(v2));
+	}
+	}
+	function check2(){
+	var v1=document.getElementById("Array").value;
+	var array = v1.split(","||" ");
+	var v2=document.getElementById("Now").value;
+			for(i=0;i<array.length;i++)
+	{
+		if(isNaN(array[i]))
+		{
+			alert("第"+(i+1)+"个输入不是数字!");
+			return;
+		}
+	}
+	if(isNaN(v2))
+	{
+		alert("当前磁盘号不是数字")
+		return;
+	}
+	if(CheckNull(v1,"请输入空闲磁盘号！")&&CheckNull(v2,"请输入当前磁盘号！"))
+	{
+		ShortPath(array,array.length,parseInt(v2));
+	}
+	}
+	function check3(){
+	var v1=document.getElementById("Array").value;
+	var array = v1.split(","||" ");
+	var v2=document.getElementById("Now").value;
+			for(i=0;i<array.length;i++)
+	{
+		if(isNaN(array[i]))
+		{
+			alert("第"+(i+1)+"个输入不是数字!");
+			return;
+		}
+	}
+	if(isNaN(v2))
+	{
+		alert("当前磁盘号不是数字!")
+		return;
+	}
+	if(CheckNull(v1,"请输入空闲磁盘号！")&&CheckNull(v2,"请输入当前磁盘号！"))
+	{
+		if(document.getElementById("Out").checked)
+		{
+			SCAN(array,array.length,parseInt(v2),0);
+		}
+		else
+		{
+			SCAN(array,array.length,parseInt(v2),1);
+		}
+	}
+	}
+	function check4(){
+	var v1=document.getElementById("Array").value;
+	var array = v1.split(","||" ");
+	var v2=document.getElementById("Now").value;
+			for(i=0;i<array.length;i++)
+	{
+		if(isNaN(array[i]))
+		{
+			alert("第"+(i+1)+"个输入不是数字!");
+			return;
+		}
+	}
+	if(isNaN(v2))
+	{
+		alert("当前磁盘号不是数字!")
+		return;
+	}
+	if(CheckNull(v1,"请输入空闲磁盘号！")&&CheckNull(v2,"请输入当前磁盘号！"))
+	{
+		CSCAN(array,array.length,parseInt(v2));
+	}
+	}
+	function check5(){
+	var v1=document.getElementById("Array").value;
+	var array = v1.split(","||" ");
+	var v2=document.getElementById("Now").value;
+			for(i=0;i<array.length;i++)
+	{
+		if(isNaN(array[i]))
+		{
+			alert("第"+(i+1)+"个输入不是数字!");
+			return;
+		}
+	}
+	if(isNaN(v2))
+	{
+		alert("当前磁盘号不是数字!")
+		return;
+	}
+	if(CheckNull(v1,"请输入空闲磁盘号！")&&CheckNull(v2,"请输入当前磁盘号！"))
+	{
+		if(document.getElementById("Out").checked)
+		{
+			FSCAN(array,array.length,parseInt(v2),0);
+		}
+		else
+		{
+			FSCAN(array,array.length,parseInt(v2),1);
+		}
+	}
+	}
+  </script>
+  </center>
+ </body>
+</html>
